@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # 1. Redis: Stores the document state
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # 2. Server: Rust backend
+  server:
+    build: ./server
+    ports:
+      - "3000:3000"
+    environment:
+      - REDIS_URL=redis://redis/
+    depends_on:
+      - redis
+
+  # 3. Client: React frontend
+  client:
+    build: ./client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    # Binds to 0.0.0.0 so you can access it from your host machine
+    command: npm run dev -- --host
+
+volumes:
+  redis_data:
