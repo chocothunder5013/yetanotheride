@@ -19,14 +19,19 @@ export function compareIds(a: OpId, b: OpId): number {
 
 export class Rga {
   nodes: RgaNode[];
+  language: string; // <--- NEW FIELD
 
   constructor() {
     this.nodes = [];
+    this.language = "javascript"; // Default
   }
 
-  // New method for Initial Sync
-  load(state: { nodes: RgaNode[] }) {
+  // Load state from server
+  load(state: { nodes: RgaNode[], language?: string }) {
     this.nodes = state.nodes;
+    if (state.language) {
+        this.language = state.language;
+    }
   }
 
   toString(): string {
@@ -36,7 +41,6 @@ export class Rga {
       .join("");
   }
 
-  // New method for handling Deletions
   delete(targetId: OpId) {
     const node = this.nodes.find(
       n => n.id.client_id === targetId.client_id && n.id.seq === targetId.seq
@@ -47,6 +51,7 @@ export class Rga {
   }
 
   insert(newNode: RgaNode) {
+    // Idempotency check
     if (this.nodes.some(n => n.id.client_id === newNode.id.client_id && n.id.seq === newNode.id.seq)) {
         return; 
     }
