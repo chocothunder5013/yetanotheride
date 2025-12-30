@@ -18,7 +18,7 @@ function App() {
   const seq = useRef(0);
 
   // If running in Docker/Localhost, this points to localhost
-  const socketUrl = 'ws://127.0.0.1:3000/ws/demo-doc';
+  const socketUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:3000/ws/demo-doc';
   
   const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
     shouldReconnect: () => true,
