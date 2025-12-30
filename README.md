@@ -1,4 +1,3 @@
-```markdown
 # 📝 Rust-Collab: Distributed Real-Time Editor
 
 **A high-performance, conflict-free collaborative code editor built with Rust, WebSockets, and CRDTs.**
@@ -67,7 +66,6 @@ graph TD
     
     Server1 -->|Broadcast| UserA
     Server2 -->|Broadcast| UserB
-
 ```
 
 ---
