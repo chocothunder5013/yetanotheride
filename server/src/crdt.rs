@@ -33,14 +33,24 @@ pub struct Node {
 }
 
 /// The Document State
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rga {
     pub nodes: Vec<Node>,
+    pub language: String, // <--- NEW: Stores the current language mode
+}
+
+impl Default for Rga {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Rga {
     pub fn new() -> Self {
-        Self { nodes: Vec::new() }
+        Self { 
+            nodes: Vec::new(),
+            language: "javascript".to_string() // Default to JS
+        }
     }
 
     pub fn to_string(&self) -> String {
@@ -49,6 +59,11 @@ impl Rga {
             .filter(|n| n.visible)
             .map(|n| n.value)
             .collect()
+    }
+
+    // Helper to check if we already have an operation (for idempotency)
+    pub fn contains(&self, id: OpId) -> bool {
+        self.nodes.iter().any(|n| n.id == id)
     }
 
     pub fn delete(&mut self, target_id: OpId) {

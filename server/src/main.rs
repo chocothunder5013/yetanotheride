@@ -57,12 +57,15 @@ async fn handle_socket(socket: WebSocket, doc_id: String, state: Arc<AppState>) 
         let (tx, rx) = mpsc::channel(100);
         let (btx, _) = broadcast::channel(100);
         let btx_clone = btx.clone();
-        
         let redis_client = state.redis_client.clone();
         let doc_id_clone = doc_id.clone();
+        
+        // Pass a clone of tx to the actor so it can self-message from Redis
+        let tx_for_actor = tx.clone(); 
 
         tokio::spawn(async move {
-            let mut actor = DocumentActor::new(rx, btx_clone, redis_client, doc_id_clone);
+            // Updated constructor call
+            let mut actor = DocumentActor::new(rx, btx_clone, redis_client, doc_id_clone, tx_for_actor);
             actor.run().await;
         });
 
@@ -95,7 +98,8 @@ async fn handle_socket(socket: WebSocket, doc_id: String, state: Arc<AppState>) 
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(Message::Text(text))) = receiver.next().await {
             if let Ok(msg) = serde_json::from_str::<ClientMessage>(&text) {
-                let _ = tx_handle.send(DocumentCommand::Message { msg }).await;
+                // Wrap in ClientMessage variant
+                let _ = tx_handle.send(DocumentCommand::ClientMessage { msg }).await;
             }
         }
     });
