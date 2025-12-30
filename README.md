@@ -1,3 +1,4 @@
+```markdown
 # 📝 Rust-Collab: Distributed Real-Time Editor
 
 **A high-performance, conflict-free collaborative code editor built with Rust, WebSockets, and CRDTs.**
@@ -55,10 +56,10 @@ The system does not send whole files. It sends **Operations**.
 
 ```mermaid
 graph TD
-    UserA[User A (US)] -->|WebSocket| Server1[Rust Server 1]
-    UserB[User B (EU)] -->|WebSocket| Server2[Rust Server 2]
+    UserA["User A (US)"] -->|WebSocket| Server1[Rust Server 1]
+    UserB["User B (EU)"] -->|WebSocket| Server2[Rust Server 2]
     
-    Server1 -->|Publish| Redis[(Redis Pub/Sub)]
+    Server1 -->|Publish| Redis[("Redis Pub/Sub")]
     Server2 -->|Publish| Redis
     
     Redis -->|Subscribe| Server1
@@ -84,7 +85,7 @@ The easiest way to spin up the full stack (Redis + Rust Backend + React Client).
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/yetanotheride.git
+git clone [https://github.com/YOUR_USERNAME/yetanotheride.git](https://github.com/YOUR_USERNAME/yetanotheride.git)
 cd yetanotheride
 
 # Start the services
@@ -173,4 +174,4 @@ When inserting a character, we look for its `origin`. If multiple users insert a
 
 ## 📄 License
 
-MIT License. Built with ❤️ by [Your Name].
+MIT License.
