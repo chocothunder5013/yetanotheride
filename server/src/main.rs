@@ -12,6 +12,7 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, oneshot};
 use crate::state::{DocumentCommand, DocumentActor, ClientMessage};
+use tower_http::cors::{CorsLayer, Any};
 
 struct AppState {
     doc_handles: DashMap<String, DocumentHandle>,
@@ -35,9 +36,15 @@ async fn main() {
         redis_client,
     });
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // For dev: allow any. For prod: specify your frontend URL
+        .allow_methods(Any)
+        .allow_headers(Any);
+    
     let app = Router::new()
         .route("/ws/:doc_id", get(ws_handler))
-        .with_state(state);
+        .with_state(state)
+        .layer(cors);
 
     println!("Listening on 0.0.0.0:3000");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

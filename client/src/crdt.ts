@@ -30,7 +30,7 @@ export class Rga {
   load(state: { nodes: RgaNode[], language?: string }) {
     this.nodes = state.nodes;
     if (state.language) {
-        this.language = state.language;
+      this.language = state.language;
     }
   }
 
@@ -51,38 +51,47 @@ export class Rga {
   }
 
   insert(newNode: RgaNode) {
-    // Idempotency check
+    // 1. Idempotency check
     if (this.nodes.some(n => n.id.client_id === newNode.id.client_id && n.id.seq === newNode.id.seq)) {
-        return; 
+      return;
     }
 
     let insertIndex = 0;
 
+    // 2. Handle Origin
     if (newNode.origin) {
       const originIdx = this.nodes.findIndex(
-        (n) =>
-          n.id.client_id === newNode.origin!.client_id &&
-          n.id.seq === newNode.origin!.seq
+        (n) => n.id.client_id === newNode.origin!.client_id && n.id.seq === newNode.origin!.seq
       );
-      if (originIdx === -1) {
-        console.error("Origin missing for node", newNode);
-        return; 
+
+      if (originIdx !== -1) {
+        insertIndex = originIdx + 1;
+      } else {
+        // CRITICAL FIX: Don't drop it. 
+        // If origin is missing, we must retry later or put it at the end (fallback).
+        // For this snippet, we will console warn and push to end to avoid crash,
+        // but in production, you MUST use a pending queue.
+        console.warn("Orphan node received, appending to end to prevent data loss:", newNode);
+        insertIndex = this.nodes.length;
       }
-      insertIndex = originIdx + 1;
     }
 
+    // 3. RGA Traversal (The "Sibling" Logic)
+    // Your original loop was correct for basic RGA
     while (insertIndex < this.nodes.length) {
       const nextNode = this.nodes[insertIndex];
-      
-      const nextOriginMatches = 
+
+      // We only skip nodes that share the SAME origin (siblings)
+      const nextOriginMatches =
         (nextNode.origin === null && newNode.origin === null) ||
-        (nextNode.origin && newNode.origin && 
-         nextNode.origin.client_id === newNode.origin.client_id && 
-         nextNode.origin.seq === newNode.origin.seq);
+        (nextNode.origin && newNode.origin &&
+          nextNode.origin.client_id === newNode.origin.client_id &&
+          nextNode.origin.seq === newNode.origin.seq);
 
       if (nextOriginMatches && compareIds(nextNode.id, newNode.id) > 0) {
         insertIndex++;
       } else {
+        // STOP. Do not skip children of siblings.
         break;
       }
     }
