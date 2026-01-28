@@ -1,32 +1,17 @@
-# 1. Build Stage
-FROM rust:latest as builder
+# Stage 1: Build the React App
+FROM node:20-alpine as builder
 WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+# IMPORTANT: This builds the static HTML/CSS/JS files
+RUN npm run build
 
-# Create a dummy project to cache dependencies
-RUN cargo new --bin server
-WORKDIR /app/server
-
-# Copy ONLY manifests
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./Cargo.toml ./Cargo.toml
-
-# Build dependencies only (this layer is cached!)
-RUN cargo build --release
-RUN rm src/*.rs
-
-# Now copy your actual source code
-COPY ./src ./src
-
-# Build the actual app (touch main.rs to force rebuild of your code)
-RUN rm ./target/release/deps/server*
-RUN cargo build --release
-
-# 2. Runtime Stage
-FROM debian:bookworm-slim
-WORKDIR /app
-# Install OpenSSL (Required for Redis/TLS)
-RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /app/server/target/release/server .
-
-CMD ["./server"]
+# Stage 2: Serve with Nginx
+FROM nginx:alpine
+# Copy the built files from Stage 1
+COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy custom Nginx config (we will create this next)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

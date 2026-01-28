@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useParams } from 'react-router-dom';
-import Editor, { OnMount } from "@monaco-editor/react";
+import Editor, { type OnMount } from "@monaco-editor/react";
 import * as monaco from 'monaco-editor';
 import { Rga, type RgaNode, type OpId } from './crdt';
 import { generateIdentity, type UserIdentity } from './identity';
@@ -178,7 +178,7 @@ function CollabEditor() {
         styleTag.textContent = cssRules;
     }, [remoteCursors]);
 
-    const handleEditorChange = useCallback((value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
+    const handleEditorChange = useCallback((_value: string | undefined, ev: monaco.editor.IModelContentChangedEvent) => {
         if (isRemoteUpdate.current) return;
         ev.changes.forEach(change => {
             if (change.rangeLength > 0) {
